@@ -1,15 +1,16 @@
-import sqlite3
 from PyQt5 import uic, QtWidgets
 from tkinter import messagebox
 import tkinter as tk
+import sqlite3
 import conexao_bd
+from backup import backup
 
 root = tk.Tk()
 
 root.overrideredirect(1)  # para nao abrir um janela (TK)
 root.withdraw()
 
-banco = sqlite3.connect('aaaa.db')
+banco = sqlite3.connect('database.db')
 cursor = banco.cursor()
 
 
@@ -64,25 +65,19 @@ def diminuir_valor():
 
         if removimento.isdigit():
 
-            novo_valor = int(valor_atual) - int(removimento)
+            if diminuir_total.radioButton_2.isChecked():
+                novo_valor = int(valor_atual) + int(removimento)
+            if diminuir_total.radioButton.isChecked():
+                novo_valor = int(valor_atual) - int(removimento)
+
             novo_valor = str(novo_valor)
 
             if int(valor_atual) >= int(removimento):
                 cursor.execute("UPDATE clientes SET valor = '" + novo_valor + "' WHERE nome = '" + pagador + "'")
                 messagebox.showinfo("showinfo", "Venda atualizada com sucesso!")
                 diminuir_total.lineEdit.setText('')
+                diminuir_total.lineEdit_3.setText('')
                 diminuir_total.close()
-
-                try:
-                    cursor.execute("SELECT total FROM faturamento WHERE mes ='agosto'")
-                    atualmente = cursor.fetchall()[0][0]
-                    faturamento = atualmente + int(removimento)
-                    faturamento = str(faturamento)
-
-                    cursor.execute("UPDATE faturamento SET total = '" + faturamento + "' WHERE mes = 'agosto'")
-                    total_receber()
-                except:
-                    print("erro ao adicionar ao faturamento")
 
                 banco.commit()
                 tela_cadastro.radioButton_5.setChecked(True)
@@ -116,7 +111,6 @@ def excluir_dados():
 
         tela_excluir.lineEdit.setText('')
 
-
         tela_excluir.close()
         total_receber()
         banco.commit()
@@ -129,14 +123,11 @@ def excluir_dados():
 def total_receber():
     cursor.execute("SELECT valor FROM clientes")  # check valor total
     dividas = cursor.fetchall()
-    cursor.execute("SELECT total FROM faturamento")
-    total_recebido = cursor.fetchall()[0][0]
 
     x = 0
     for i in dividas:
         x = x + i[0]
 
-    tela_cadastro.pushButton_5.setText(f'{total_recebido}')
     tela_cadastro.pushButton.setText(f'Ola Leandro voce tem R${x} para receber ainda.')
 
 
@@ -217,11 +208,12 @@ def limpa_tabela(valor):
 
 
 app = QtWidgets.QApplication([])
-tela_cadastro = uic.loadUi("tela_cadastro.ui")
-inserir_cadastro = uic.loadUi("atualizar_dados.ui")
-diminuir_total = uic.loadUi("diminuir_total.ui")
-tela_excluir = uic.loadUi("tela_excluir.ui")
+tela_cadastro = uic.loadUi("ui\\tela_cadastro.ui")
+inserir_cadastro = uic.loadUi("ui\\atualizar_dados.ui")
+diminuir_total = uic.loadUi("ui\\diminuir_total.ui")
+tela_excluir = uic.loadUi("ui\\tela_excluir.ui")
 tela_cadastro.pushButton_2.clicked.connect(abrir_inserir_cadastro)
+tela_cadastro.pushButton_5.clicked.connect(backup)
 tela_cadastro.pushButton_3.clicked.connect(abrir_diminuir_total)
 tela_cadastro.pushButton_4.clicked.connect(abrir_tela_excluir)
 inserir_cadastro.pushButton.clicked.connect(add_divida)
@@ -233,5 +225,6 @@ tela_cadastro.pushButton_7.clicked.connect(pesquisar)
 tela_cadastro.show()
 total_receber()
 tela_cadastro.radioButton_5.setChecked(True)
+diminuir_total.radioButton.setChecked(True)
 pesquisar()
 app.exec()

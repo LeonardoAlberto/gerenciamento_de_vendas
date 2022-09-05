@@ -4,7 +4,7 @@ import sqlite3
 def conexao():
     try:
         # Conexão ao banco de dados
-        connection = sqlite3.connect("aaaa.db")
+        connection = sqlite3.connect("database.db")
         return connection
     except:
         print('Erro banco de dados')
